@@ -48,7 +48,7 @@ LangGraph Controller (State)
 ├─ SourceAnalysis Node(s): LLM analyzes each source separately (prompt templates)
 ├─ Synthesizer Node: LLM synthesizes final answer, merging source analyses
 └─ Output Formatter: enforces Pydantic schema + citations
-
+![Architecture Diagram of Deep Research Agent]()
 ## Architecture — Description
 
 ### User Query  
