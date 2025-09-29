@@ -116,4 +116,56 @@ cp .env.example .env
 # edit .env to add OPENAI_API_KEY, BRIGHTDATA_API_KEY, etc.
 python run_agent.py --query "Should I move to Lisbon in 2025?"
 ```
+## How I built it — Implementation notes & best practices
 
+### Node design
+- Keep nodes **deterministic** and **side-effect free**: accept state in → return updated state out.  
+- Benefits: easier unit testing, retries, and reproducibility.
+
+### Prompt layering
+- **Summarize each source first**, then run a separate synthesis prompt over those summaries.  
+- This reduces LLM cognitive load and improves factual grounding.
+
+### Typed outputs
+- Use **Pydantic models** for outputs such as `SelectedURLs`, `SourceSummary`, `FinalSynthesis`.  
+- Validate LLM outputs against schemas; **retry or re-prompt** when structure is violated.
+
+### Snapshot polling
+- For crawls/snapshots implement robust polling with:
+  - exponential backoff,
+  - sensible timeouts,
+  - support for **partial retrievals** when some snapshots finish earlier.
+
+### Cost control
+- Use smaller, cheaper models for intermediate summarization tasks.  
+- Reserve higher-cost models for the **final synthesis** step only.
+
+### Logging & observability
+- Emit **structured JSON logs** and request traces.  
+- Expose metrics/dashboards for latency, error rates, and cost-per-query.
+
+---
+
+## Tests & validation
+- **Unit tests** for every node (mock Bright Data and OpenAI responses).  
+- **Integration smoke tests** to validate end-to-end flow (use canned datasets).  
+- **Human evaluation pipeline** to measure factuality, precision, and recall; use these metrics to iterate on prompts and filters.
+
+---
+
+## Roadmap / Extensions
+- Add more sources: **Twitter/X**, news APIs, academic sources (CrossRef, Semantic Scholar).  
+- Support **multi-turn conversation** and incremental updating of the state.  
+- Add a **knowledge-update node** to feed validated claims into a short-term cache or knowledge store.  
+- Build a **lightweight UI** for running queries, inspecting state & sources, and approving final outputs.
+
+---
+
+## Contribution
+I welcome PRs that:
+- add new source integrations,  
+- improve prompt templates,  
+- harden snapshot/poll handling, or  
+- add CI tests and sample datasets.
+
+Please open issues for feature requests or bugs.
